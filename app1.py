@@ -66,6 +66,107 @@ async def search_Architect_factories_in_district(Keyword, district, State):
                     print( f"Currently Found: ", await page.locator( '//a[contains(@href, "https://www.google.com/maps/place")]' ).count(), )
         # scraping
         for listing in listings:
+            try:
+                # Wait for the listing to be visible
+                await listing.wait_for_selector('xpath=..', state='visible')
+                await listing.click()
+                await page.wait_for_timeout(5000)
+            except Exception as e:
+                print(f"Error processing listing: {str(e)}")
+                continue
+            name_xpath = '//div[@class="TIHn2 "]//h1[@class="DUwDvf lfPIob"]'
+            address_xpath = '//button[@data-item-id="address"]//div[contains(@class, "fontBodyMedium")]'
+            website_xpath = '//a[@data-item-id="authority"]//div[contains(@class, "fontBodyMedium")]'
+            phone_number_xpath = '//button[contains(@data-item-id, "phone:tel:")]//div[contains(@class, "fontBodyMedium")]'
+            reviews_count_xpath = '//div[@class="TIHn2 "]//div[@class="fontBodyMedium dmRWX"]//div//span//span//span[@aria-label]'
+            reviews_average_xpath = '//div[@class="TIHn2 "]//div[@class="fontBodyMedium dmRWX"]//div//span[@aria-hidden]'
+            info1='//div[@class="LTs0Rc"][1]'#store
+            info2='//div[@class="LTs0Rc"][2]'#pickup
+            info3='//div[@class="LTs0Rc"][3]'#delivery
+            opens_at_xpath='//button[contains(@data-item-id, "oh")]//div[contains(@class, "fontBodyMedium")]'#time
+            opens_at_xpath2='//div[@class="MkV9"]//span[@class="ZDu9vd"]//span[2]'
+            place_type_xpath='//div[@class="LBgpqf"]//button[@class="DkEaL "]'#type of place
+            intro_xpath='//div[@class="WeS02d fontBodyMedium"]//div[@class="PYvSYb "]'
+            if await page.locator(intro_xpath).count() > 0:
+                Introduction = await page.locator(intro_xpath).inner_text()
+                intro_list.append(Introduction)
+            else:
+                Introduction = ""
+                intro_list.append("None Found")
+            if await page.locator(reviews_count_xpath).count() > 0:
+                temp = await page.locator(reviews_count_xpath).inner_text()
+                temp=temp.replace('(','').replace(')','').replace(',','')
+                Reviews_Count=int(temp)
+                reviews_c_list.append(Reviews_Count)
+            else:
+                Reviews_Count = ""
+                reviews_c_list.append(Reviews_Count)
+            if await page.locator(reviews_average_xpath).count() > 0:
+                temp = await page.locator(reviews_average_xpath).inner_text()
+                temp=temp.replace(' ','')
+                Reviews_Average=float(temp)
+                reviews_a_list.append(Reviews_Average)
+            else:
+                Reviews_Average = ""
+                reviews_a_list.append(Reviews_Average)
+            if await page.locator(info1).count() > 0:
+                temp = await page.locator(info1).inner_text()
+                temp=temp.split('·')
+                check=temp[1]
+                check=check.replace("\n","")
+                if 'shop' in check:
+                    Store_Shopping=check
+                    store_s_list.append("Yes")
+                elif 'pickup' in check:
+                    In_Store_Pickup=check
+                    in_store_list.append("Yes")
+                elif 'delivery' in check:
+                    Store_Delivery=check
+                    store_del_list.append("Yes")
+            else:
+                Store_Shopping = ""
+                store_s_list.append("No")
+            if await page.locator(info2).count() > 0:
+                temp = await page.locator(info2).inner_text()
+                temp=temp.split('·')
+                check=temp[1]
+                check=check.replace("\n","")
+                if 'pickup' in check:
+                    In_Store_Pickup=check
+                    in_store_list.append("Yes")
+                elif 'shop' in check:
+                    Store_Shopping=check
+                    store_s_list.append("Yes")
+                elif 'delivery' in check:
+                    Store_Delivery=check
+                    store_del_list.append("Yes")
+            else:
+                In_Store_Pickup = ""
+                in_store_list.append("No")
+            if await page.locator(info3).count() > 0:
+                temp = await page.locator(info3).inner_text()
+                temp = temp.split('·')
+                check = temp[1]
+                check = check.replace("\n", "")
+                if 'Delivery' in check:
+                    Store_Delivery = check
+                    store_del_list.append("Yes")
+                elif 'pickup' in check:
+                    In_Store_Pickup = check
+                    in_store_list.append("Yes")
+                elif 'shop' in check:
+                    Store_Shopping = check
+                    store_s_list.append("Yes")
+            else:
+                Store_Delivery = ""
+                store_del_list.append("No")
+            if await page.locator(opens_at_xpath).count() > 0:
+                opens = await page.locator(opens_at_xpath).inner_text()
+                opens=opens.split('⋅')
+                if len(opens)!=1:
+                    opens=opens[1]
+                else:
+                    opens = await page.locator(opens_at_xpath).inner_text()
             await listing.click()
             await page.wait_for_timeout(5000)
             name_xpath = '//div[@class="TIHn2 "]//h1[@class="DUwDvf lfPIob"]'
@@ -139,21 +240,19 @@ async def search_Architect_factories_in_district(Keyword, district, State):
                 in_store_list.append("No")
             if await page.locator(info3).count() > 0:
                 temp = await page.locator(info3).inner_text()
-                temp=temp.split('·')
-                check=temp[1]
-                check=check.replace("\n","")
-                # l1.append(check)
+                temp = temp.split('·')
+                check = temp[1]
+                check = check.replace("\n", "")
                 if 'Delivery' in check:
-                    Store_Delivery=check
+                    Store_Delivery = check
                     store_del_list.append("Yes")
                 elif 'pickup' in check:
-                    In_Store_Pickup=check
+                    In_Store_Pickup = check
                     in_store_list.append("Yes")
                 elif 'shop' in check:
-                    Store_Shopping=check
+                    Store_Shopping = check
                     store_s_list.append("Yes")
             else:
-                # l1.append("")
                 Store_Delivery = ""
                 store_del_list.append("No")
             if await page.locator(opens_at_xpath).count() > 0:
@@ -249,15 +348,20 @@ async def main():
     st.title("Google Maps Scraper")
     scraping_completed = False
     keyword = st.text_input("Enter Keyword to Search")
-    # districts_list = ["Almora", "Bageshwar", "Chamoli", "Champawat", "Dehradun", "Haridwar", "Nainital", "Pauri Garhwal", "Pithoragarh", "Rudraprayag", "Tehri Garhwal", "Udham Singh Nagar", "Uttarkashi"]
-    districts_input = st.text_input("Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni", "Thiruvallur", "Thoothukudi (Tuticorin)", "Tiruchirappalli", "Tirunelveli", "Tirupathur", "Tiruppur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar")
+    
+    # Use a text area for multiple district inputs
+    districts_input = st.text_area("Enter Districts (comma-separated)", 
+                                   "Ariyalur, Chengalpattu, Chennai, Coimbatore, Cuddalore, Dharmapuri, Dindigul, Erode, Kallakurichi, Kanchipuram, Kanyakumari, Karur, Krishnagiri, Madurai, Mayiladuthurai, Nagapattinam, Namakkal, Nilgiris, Perambalur, Pudukkottai, Ramanathapuram, Ranipet, Salem, Sivaganga, Tenkasi, Thanjavur, Theni, Thiruvallur, Thoothukudi (Tuticorin), Tiruchirappalli, Tirunelveli, Tirupathur, Tiruppur, Tiruvannamalai, Tiruvarur, Vellore, Viluppuram, Virudhunagar")
+    
     districts_list = [district.strip() for district in districts_input.split(",")]
-    State=st.text_input("Enter state name", value="Tamil Nadu")
+    State = st.text_input("Enter state name", value="Tamil Nadu")
+    
     if st.button("Scrape for Architect"):
         for district in districts_list:
             await search_Architect_factories_in_district(keyword, district, State)
         scraping_completed = True
-        st.success(f"Scraping completed for all district")
+        st.success(f"Scraping completed for all districts")
+    
     if scraping_completed and os.path.exists("result.csv"):
         st.download_button(
             label="Download result.csv",
@@ -280,6 +384,10 @@ if __name__ == "__main__":
     loop = asyncio.ProactorEventLoop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(main())
+
+
+
+
 
 
 
